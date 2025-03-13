@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./page.module.css"; 
 import { useRouter } from "next/navigation";
 import useServer from "./history/useServer"; 
@@ -29,16 +29,17 @@ export default function Calculator() {
   const [firstValue, setFirstValue] = useState(null);
   const [operator, setOperator] = useState(null);
   const [waitingForSecond, setWaitingForSecond] = useState(false);
-  const [key, setKey] = useAtom(keyAtom); // 전역 상태로 key 관리
-  const [openKeyModal, setOpenKeyModal] = useState(true); // Modal 상태
-
+  const [key, setKey] = useAtom(keyAtom); //전역 상태로 key 관리
+  const [openKeyModal, setOpenKeyModal] = useState(true); //Modal 상태
+  const[tempKey, setTempKey] = useState("");
   const { postHistory } = useServer();  
   const { push } = useRouter();
 
-  const handleKeySubmit = () => { // Key 입력창 닫기
-    if (key) { 
+  const handleKeySubmit = () => { //Key 입력창 닫기
+    if (tempKey) { 
       setOpenKeyModal(false);
-      console.log("📌 설정된 계산기 Key:", key);
+      setKey(tempKey);
+      console.log("📌 설정된 계산기 Key:", tempKey);
     }
   };
 
@@ -121,8 +122,8 @@ export default function Calculator() {
             label="계산기 Key"
             variant="outlined"
             fullWidth
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
+            value={tempKey}
+            onChange={(e) => setTempKey(e.target.value)} 
           />
           <Button 
             variant="outlined" 
