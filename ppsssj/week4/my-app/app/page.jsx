@@ -4,6 +4,9 @@ import { useState } from "react";
 import styles from "./page.module.css"; 
 import { useRouter } from "next/navigation";
 import useServer from "./history/useServer"; 
+import { Modal, Box, TextField, Button } from "@mui/material"; 
+import { useAtom } from "jotai";
+import { keyAtom } from "./store.jsx"; //Jotai에서 keyAtom 가져오기
 
 function NumButton({ value, onClick }) {
   return (
@@ -22,13 +25,22 @@ function OpButton({ value, onClick }) {
 }
 
 export default function Calculator() {
-  const [display, setDisplay] = useState(""); 
+  const [display, setDisplay] = useState(""); //빈 문자열
   const [firstValue, setFirstValue] = useState(null);
   const [operator, setOperator] = useState(null);
   const [waitingForSecond, setWaitingForSecond] = useState(false);
-  
+  const [key, setKey] = useAtom(keyAtom); // 전역 상태로 key 관리
+  const [openKeyModal, setOpenKeyModal] = useState(true); // Modal 상태
+
   const { postHistory } = useServer();  
   const { push } = useRouter();
+
+  const handleKeySubmit = () => { // Key 입력창 닫기
+    if (key) { 
+      setOpenKeyModal(false);
+      console.log("📌 설정된 계산기 Key:", key);
+    }
+  };
 
   function calculate(first, second, operator) {
     const num1 = parseFloat(first);
@@ -64,10 +76,8 @@ export default function Calculator() {
     const expression = `${firstValue} ${operator} ${display} = ${result}`;
     console.log("📌 전송할 데이터:", expression);
     postHistory(expression);
-    
   }
-  
-  
+
   function handleNumClick(value) {
     if (waitingForSecond) {
       setDisplay(value);
@@ -95,6 +105,35 @@ export default function Calculator() {
 
   return (
     <div className={styles.calc}>
+      <Modal open={openKeyModal} onClose={() => setOpenKeyModal(false)}>
+        <Box sx={{ 
+          position: 'absolute', 
+          top: '50%', 
+          left: '50%', 
+          borderRadius: 3,
+          transform: 'translate(-50%, -50%)', 
+          bgcolor: 'background.paper', 
+          padding: 4,
+          boxShadow: 24,
+          width: 300,
+        }}>
+          <TextField
+            label="계산기 Key"
+            variant="outlined"
+            fullWidth
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+          />
+          <Button 
+            variant="outlined" 
+            onClick={handleKeySubmit}
+            fullWidth
+            sx={{ marginTop: 2 }}
+          >
+            확인
+          </Button>
+        </Box>
+      </Modal>
       <div className={styles.display}>{display}</div>
       <div className={styles.buttons_tool}>
         <div style={{ display: "flex" }}>
@@ -120,11 +159,6 @@ export default function Calculator() {
           <NumButton value="2" onClick={handleNumClick} />
           <NumButton value="3" onClick={handleNumClick} />
           <OpButton value="+" onClick={handleOpClick} />
-        </div>
-        <div style={{ display: "flex" }}>
-          <NumButton value="&nbsp;" />
-          <NumButton value="0" onClick={handleNumClick} />
-          <NumButton value="&nbsp;" />
         </div>
       </div>
       <button onClick={goToHistoryPage}>페이지 이동</button>
